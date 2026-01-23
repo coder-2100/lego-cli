@@ -1,0 +1,9 @@
+packages:
+  - core/*
+  - commands/*
+  - models/*
+  - utils/*
+
+catalog:
+  import-local: ^3.2.0
+  npmlog: ^7.0.1
