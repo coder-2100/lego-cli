@@ -1,6 +1,6 @@
 {
   "name": "@coder-2100/core",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "lego-cli core",
   "bin": {
     "lego-cli": "bin/index.js"
@@ -14,8 +14,15 @@
   "license": "MIT",
   "packageManager": "pnpm@10.6.5",
   "dependencies": {
+    "@coder-2100/get-npm-info": "workspace:*",
     "@coder-2100/log": "workspace:*",
+    "colors": "catalog:",
+    "dotenv": "catalog:",
     "import-local": "catalog:",
-    "npmlog": "catalog:"
+    "minimist": "catalog:",
+    "npmlog": "catalog:",
+    "path-exists": "catalog:",
+    "root-check": "catalog:",
+    "semver": "catalog:"
   }
 }
