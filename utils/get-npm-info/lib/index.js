@@ -1,7 +1,9 @@
 "use strict";
+import { createRequire } from "module";
+import axios from "axios";
+import urlJoin from "url-join";
 
-const axios = require("axios");
-const urlJoin = require("url-join");
+const require = createRequire(import.meta.url);
 const semver = require("semver");
 
 function getNpmInfo(npmName, registry) {
@@ -50,8 +52,4 @@ async function getNpmSemverVersion(baseVersion, npmName, registry) {
   }
 }
 
-module.exports = {
-  getNpmInfo,
-  getNpmVersions,
-  getNpmSemverVersion,
-};
+export { getNpmInfo, getNpmVersions, getNpmSemverVersion };

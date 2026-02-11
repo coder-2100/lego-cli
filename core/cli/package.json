@@ -2,6 +2,7 @@
   "name": "@coder-2100/core",
   "version": "0.1.0",
   "description": "lego-cli core",
+  "type": "module",
   "bin": {
     "lego-cli": "bin/index.js"
   },

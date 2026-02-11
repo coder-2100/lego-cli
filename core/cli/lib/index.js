@@ -1,21 +1,28 @@
 "use strict";
+import { createRequire } from "module";
+import os from "node:os";
+import path from "node:path";
+import { readFileSync } from "fs";
+import { pathExists } from "path-exists"; // 判断路径是否存在
+import dotenv from "dotenv";
+import { LOWEST_NODE_VERSION, DEFAULT_CLI_HOME } from "./const.js";
+import log from "@coder-2100/log";
+import rootCheck from "root-check";
+import { getNpmSemverVersion } from "@coder-2100/get-npm-info";
 
-module.exports = core;
-
-const os = require("node:os");
-const userHome = os.homedir(); // 获取用户主目录的路径
-const pathExists = require("path-exists").sync; // 判断路径是否存在
+const require = createRequire(import.meta.url);
 const semver = require("semver");
 const colors = require("colors/safe");
+const pkg = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url)),
+);
 // 拓展：require能加载什么文件 -> .js/.json/.node
 // .js -> 满足module.exports /exports 导出
 // .json -> 默认使用JSON.parse解析
 // .node -> C++模块
 // any -> 其他任何格式文件均按.js处理
-const pkg = require("../package.json");
-const log = require("@coder-2100/log");
-const constant = require("./const");
-const path = require("node:path");
+
+const userHome = os.homedir(); // 获取用户主目录的路径
 let args, config;
 
 async function core() {
@@ -23,9 +30,9 @@ async function core() {
     checkPkgVersion();
     checkNodeVersion();
     checkRoot();
-    checkUserHome();
+    await checkUserHome();
     checkInputArgs();
-    checkEnv();
+    await checkEnv();
     await checkGlobalUpdate();
   } catch (e) {
     log.error(e.message);
@@ -37,7 +44,6 @@ async function checkGlobalUpdate() {
   const currentVersion = pkg.version;
   const npmName = pkg.name;
   // 2. 调用npm API，获取所有版本号（http://registry.npmjs.org/${packagename}）
-  const { getNpmSemverVersion } = require("@coder-2100/get-npm-info");
   // 3. 提取所有版本号比对哪些版本号是大雨当前版本号
   const lastVersion = await getNpmSemverVersion(
     currentVersion,
@@ -52,10 +58,10 @@ async function checkGlobalUpdate() {
   }
 }
 // 6. 检查环境变量
-function checkEnv() {
-  const dotenv = require("dotenv");
+async function checkEnv() {
   const dotenvPath = path.resolve(userHome, ".env");
-  if (pathExists(dotenvPath)) {
+  const isExist = await pathExists(dotenvPath);
+  if (isExist) {
     dotenv.config({ path: dotenvPath });
   }
   createDefaultConfig();
@@ -68,7 +74,7 @@ function createDefaultConfig() {
   if (process.env.CLI_HOME) {
     cliConfig["cliHome"] = path.join(userHome, process.env.CLI_HOME);
   } else {
-    cliConfig["cliHome"] = path.join(userHome, constant.DEFAULT_CLI_HOME);
+    cliConfig["cliHome"] = path.join(userHome, DEFAULT_CLI_HOME);
   }
   process.env.CLI_HOME_PATH = cliConfig.cliHome; // 存到环境变量中
   // return cliConfig;
@@ -88,23 +94,23 @@ function checkArgs() {
   log.level = process.env.LOG_LEVEL; // 让环境变量在log工具中生效
 }
 // 4. 检查用户主目录
-function checkUserHome() {
-  if (!userHome || !pathExists(userHome)) {
+async function checkUserHome() {
+  const isExist = await pathExists(userHome);
+  if (!userHome || !isExist) {
     throw new Error(colors.red("当前登录用户主目录不存在！"));
   }
 }
 // 3. 检查root账户
 function checkRoot() {
   // process.geteuid() 0：管理员
-  const rootCheck = require("root-check"); // 降级
-  rootCheck();
+  rootCheck(); // 降级
 }
 // 2. 检查版本号
 function checkNodeVersion() {
   // 第一步，获取当前Node版本号
   const currentVersion = process.version;
   // 第二步，比对最低版本号
-  const lowsetVersion = constant.LOWEST_NODE_VERSION;
+  const lowsetVersion = LOWEST_NODE_VERSION;
   if (!semver.gte(currentVersion, lowsetVersion)) {
     throw new Error(
       colors.red(`lego-cli 需要安装 v${lowsetVersion}以上版本的Node.js`),
@@ -117,3 +123,5 @@ function checkNodeVersion() {
 function checkPkgVersion() {
   log.success(`当前版本：${pkg.version}`);
 }
+
+export { core };
