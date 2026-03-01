@@ -1,0 +1,12 @@
+{
+  "name": "@coder-2100/init",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "初始化命令",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}

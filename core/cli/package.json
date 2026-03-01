@@ -16,8 +16,10 @@
   "packageManager": "pnpm@10.6.5",
   "dependencies": {
     "@coder-2100/get-npm-info": "workspace:*",
+    "@coder-2100/init": "workspace:*",
     "@coder-2100/log": "workspace:*",
     "colors": "catalog:",
+    "commander": "catalog:",
     "dotenv": "catalog:",
     "import-local": "catalog:",
     "minimist": "catalog:",

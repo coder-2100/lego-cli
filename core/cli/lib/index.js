@@ -8,7 +8,9 @@ import dotenv from "dotenv";
 import { LOWEST_NODE_VERSION, DEFAULT_CLI_HOME } from "./const.js";
 import log from "@coder-2100/log";
 import rootCheck from "root-check";
+import { Command } from "commander";
 import { getNpmSemverVersion } from "@coder-2100/get-npm-info";
+import init from "@coder-2100/init";
 
 const require = createRequire(import.meta.url);
 const semver = require("semver");
@@ -25,19 +27,62 @@ const pkg = JSON.parse(
 const userHome = os.homedir(); // 获取用户主目录的路径
 let args, config;
 
+const program = new Command();
+
 async function core() {
   try {
     checkPkgVersion();
     checkNodeVersion();
     checkRoot();
     await checkUserHome();
-    checkInputArgs();
+    // checkInputArgs();
     await checkEnv();
     await checkGlobalUpdate();
+    registerCommand();
   } catch (e) {
     log.error(e.message);
   }
 }
+
+// 命令注册
+function registerCommand() {
+  program
+    .name(Object.keys(pkg.bin)[0]) // 获取命令名称
+    .usage("<command> [options]")
+    .version(pkg.version)
+    .option("-d, --debug", "是否开启调试模式", false);
+
+  program
+    .command("init [projectName]")
+    .description("初始化项目")
+    .option("-f, --force", "是否强制初始化项目")
+    .action(init);
+
+  // 开启debug模式
+  program.on("option:debug", () => {
+    if (program.opts().debug) {
+      process.env.LOG_LEVEL = "verbose"; // 改变级别，让debug生效
+    } else {
+      process.env.LOG_LEVEL = "info";
+    }
+    log.level = process.env.LOG_LEVEL; // 让环境变量在log工具中生效
+  });
+  program.on("command:*", (obj) => {
+    const availableCommands = program.commands.map((cmd) => cmd.name());
+    log.error(colors.red(`未知的命令：${obj[0]}`));
+    if (availableCommands.length > 0) {
+      log.info(colors.green(`可用的命令：${availableCommands.join(", ")}`));
+    }
+  });
+
+  program.parse(process.argv);
+
+  if (program.args && program.args.length < 1) {
+    program.outputHelp();
+    console.log(); // 多一个空行，优化显示效果
+  }
+}
+
 // 7. 检查是否需要更新
 async function checkGlobalUpdate() {
   // 1. 获取当前版本号和模块名
