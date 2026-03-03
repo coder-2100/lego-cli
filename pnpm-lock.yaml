@@ -21,9 +21,6 @@ catalogs:
     import-local:
       specifier: ^3.2.0
       version: 3.2.0
-    minimist:
-      specifier: ^1.2.8
-      version: 1.2.8
     npmlog:
       specifier: ^7.0.1
       version: 7.0.1
@@ -48,6 +45,9 @@ importers:
 
   core/cli:
     dependencies:
+      '@coder-2100/exec':
+        specifier: workspace:*
+        version: link:../exec
       '@coder-2100/get-npm-info':
         specifier: workspace:*
         version: link:../../utils/get-npm-info
@@ -69,9 +69,6 @@ importers:
       import-local:
         specifier: 'catalog:'
         version: 3.2.0
-      minimist:
-        specifier: 'catalog:'
-        version: 1.2.8
       npmlog:
         specifier: 'catalog:'
         version: 7.0.1
@@ -84,6 +81,18 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.7.3
+
+  core/exec:
+    dependencies:
+      '@coder-2100/package':
+        specifier: workspace:*
+        version: link:../../models/package
+
+  models/package:
+    dependencies:
+      '@coder-2100/utils':
+        specifier: workspace:*
+        version: link:../../utils/utils
 
   utils/get-npm-info:
     dependencies:
@@ -102,6 +111,8 @@ importers:
       npmlog:
         specifier: 'catalog:'
         version: 7.0.1
+
+  utils/utils: {}
 
 packages:
 
@@ -289,9 +300,6 @@ packages:
   mime-types@2.1.35:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
-
-  minimist@1.2.8:
-    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
   npmlog@7.0.1:
     resolution: {integrity: sha512-uJ0YFk/mCQpLBt+bxN88AKd+gyqZvZDbtiNxk6Waqcj2aPRyfVx8ITawkyQynxUagInjdYT1+qj4NfA5KJJUxg==}
@@ -540,8 +548,6 @@ snapshots:
   mime-types@2.1.35:
     dependencies:
       mime-db: 1.52.0
-
-  minimist@1.2.8: {}
 
   npmlog@7.0.1:
     dependencies:

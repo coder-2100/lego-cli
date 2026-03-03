@@ -1,0 +1,15 @@
+{
+  "name": "@coder-2100/exec",
+  "version": "0.1.0",
+  "description": "execute package",
+  "type": "module",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@coder-2100/package": "workspace:*"
+  }
+}

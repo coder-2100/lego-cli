@@ -11,6 +11,7 @@ import rootCheck from "root-check";
 import { Command } from "commander";
 import { getNpmSemverVersion } from "@coder-2100/get-npm-info";
 import init from "@coder-2100/init";
+import exec from "@coder-2100/exec";
 
 const require = createRequire(import.meta.url);
 const semver = require("semver");
@@ -31,32 +32,36 @@ const program = new Command();
 
 async function core() {
   try {
-    checkPkgVersion();
-    checkNodeVersion();
-    checkRoot();
-    await checkUserHome();
-    // checkInputArgs();
-    await checkEnv();
-    await checkGlobalUpdate();
+    await prepare();
     registerCommand();
   } catch (e) {
     log.error(e.message);
   }
 }
-
+// 前置过程
+async function prepare() {
+  checkPkgVersion();
+  checkNodeVersion();
+  checkRoot();
+  await checkUserHome();
+  // checkInputArgs();
+  await checkEnv();
+  await checkGlobalUpdate();
+}
 // 命令注册
 function registerCommand() {
   program
     .name(Object.keys(pkg.bin)[0]) // 获取命令名称
     .usage("<command> [options]")
     .version(pkg.version)
-    .option("-d, --debug", "是否开启调试模式", false);
+    .option("-d, --debug", "是否开启调试模式", false)
+    .option("-p, --targetPath <targetPath>", "是否指定本地调试文件路径", "");
 
   program
     .command("init [projectName]")
     .description("初始化项目")
     .option("-f, --force", "是否强制初始化项目")
-    .action(init);
+    .action(exec);
 
   // 开启debug模式
   program.on("option:debug", () => {
@@ -67,6 +72,12 @@ function registerCommand() {
     }
     log.level = process.env.LOG_LEVEL; // 让环境变量在log工具中生效
   });
+
+  // 监听targetPath参数，设置环境变量
+  program.on("option:targetPath", () => {
+    process.env.CLI_TARGET_PATH = program.opts().targetPath;
+  });
+  // 监听未知命令
   program.on("command:*", (obj) => {
     const availableCommands = program.commands.map((cmd) => cmd.name());
     log.error(colors.red(`未知的命令：${obj[0]}`));
@@ -110,7 +121,6 @@ async function checkEnv() {
     dotenv.config({ path: dotenvPath });
   }
   createDefaultConfig();
-  log.verbose("环境变量", process.env.CLI_HOME_PATH);
 }
 function createDefaultConfig() {
   const cliConfig = {
@@ -124,20 +134,20 @@ function createDefaultConfig() {
   process.env.CLI_HOME_PATH = cliConfig.cliHome; // 存到环境变量中
   // return cliConfig;
 }
-// 5. 检查用户参数
-function checkInputArgs() {
-  const minimist = require("minimist");
-  args = minimist(process.argv.slice(2));
-  checkArgs();
-}
-function checkArgs() {
-  if (args.debug) {
-    process.env.LOG_LEVEL = "verbose"; // 改变级别，让debug生效
-  } else {
-    process.env.LOG_LEVEL = "info";
-  }
-  log.level = process.env.LOG_LEVEL; // 让环境变量在log工具中生效
-}
+// 5. 检查用户参数 --- 通过commander工具实现代替
+// function checkInputArgs() {
+//   const minimist = require("minimist");
+//   args = minimist(process.argv.slice(2));
+//   checkArgs();
+// }
+// function checkArgs() {
+//   if (args.debug) {
+//     process.env.LOG_LEVEL = "verbose"; // 改变级别，让debug生效
+//   } else {
+//     process.env.LOG_LEVEL = "info";
+//   }
+//   log.level = process.env.LOG_LEVEL; // 让环境变量在log工具中生效
+// }
 // 4. 检查用户主目录
 async function checkUserHome() {
   const isExist = await pathExists(userHome);
