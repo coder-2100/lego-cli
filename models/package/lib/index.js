@@ -1,6 +1,16 @@
 "use strict";
 
-import { isObject } from "@coder-2100/utils";
+import { isObject, require } from "@coder-2100/utils";
+import { packageDirectorySync } from "package-directory";
+import {
+  getDefaultRegistry,
+  getNpmLatestVersion,
+} from "@coder-2100/get-npm-info";
+import { formatPath } from "@coder-2100/format-path";
+import { pathExistsSync } from "path-exists";
+import path from "path";
+import npminstall from "npminstall";
+import { mkdirsSync } from "fs-extra/esm";
 
 class Package {
   constructor(options) {
@@ -12,22 +22,99 @@ class Package {
     }
     // package的路径
     this.targetPath = options.targetPath;
-    // package的存储路径
-    this.storePath = options.storePath;
+    // 缓存package的路径
+    this.storeDir = options.storeDir;
     // package的名称
-    this.packageName = options.packageName;
+    this.packageName = options.packa / geName;
     // package的版本
     this.packageVersion = options.packageVersion;
+    // 缓存路径前缀
+    this.cacheFilePathPrefix = this.packageName.replace(/\//g, "_");
   }
 
+  async prepare() {
+    if (this.storeDir && !pathExistsSync(this.storeDir)) {
+      mkdirsSync(this.storeDir); // 如果不存在则创建目录
+    }
+    if (this.packageVersion === "latest") {
+      const latestVersion = await getNpmLatestVersion(this.packageName);
+      this.packageVersion = latestVersion;
+    }
+  }
+  get cacheFilePath() {
+    return path.resolve(
+      this.storeDir,
+      `_${this.cacheFilePathPrefix}@${this.packageVersion}@${this.packageName}`,
+    );
+  }
+  getSpecificCacheFilePath(packageVersion) {
+    return path.resolve(
+      this.storeDir,
+      `_${this.cacheFilePathPrefix}@${packageVersion}@${this.packageName}`,
+    );
+  }
   // 检查Package是否存在
-  exists() {}
+  async exists() {
+    if (this.storeDir) {
+      await this.prepare();
+      return pathExistsSync(this.cacheFilePath);
+    } else {
+      return pathExistsSync(this.targetPath);
+    }
+  }
   // 安装Package
-  install() {}
+  async install() {
+    await this.prepare();
+    return npminstall({
+      root: this.targetPath,
+      storeDir: this.storeDir,
+      registry: getDefaultRegistry(),
+      pkgs: [{ name: this.packageName, version: this.packageVersion }],
+    });
+  }
   // 更新Package
-  update() {}
+  async update() {
+    await this.prepare();
+    // 1. 获取最新的npm模块版本号
+    const lastestPackageVersion = await getNpmLatestVersion();
+    // 2. 查询最新版本号对应的路径是否存在
+    const lastestFilePath = this.getSpecificCacheFilePath(
+      lastestPackageVersion,
+    );
+    // 3. 如果不存在，则直接安装最新版
+    if (!lastestFilePath) {
+      await npminstall({
+        root: this.targetPath,
+        storeDir: this.storeDir,
+        registry: getDefaultRegistry(),
+        pkgs: [{ name: this.packageName, version: lastestPackageVersion }],
+      });
+      this.packageVersion = lastestPackageVersion;
+    }
+  }
   // 获取Package入口文件路径
-  getRootFilePath() {}
+  getRootFilePath() {
+    function _getRootFile(targetPath) {
+      // 1. 获取package.json所在的目录（使用pkg-dir库）
+      const pkgDir = packageDirectorySync({ cwd: targetPath });
+      if (pkgDir) {
+        // 2. 读取package.json文件
+        const filePath = path.resolve(pkgDir, "package.json");
+        const pkgFile = require(filePath);
+        // 3. 找到main或者lib
+        if (pkgFile && pkgFile.main) {
+          // 4. 路径的兼容（mac/win）
+          return formatPath(path.resolve(pkgDir, pkgFile.main));
+        }
+      }
+      return null;
+    }
+    if (this.storeDir) {
+      return _getRootFile(this.cacheFilePath);
+    } else {
+      return _getRootFile(this.targetPath);
+    }
+  }
 }
 
 export default Package;

@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@coder-2100/package": "workspace:*"
+    "@coder-2100/package": "workspace:*",
+    "@coder-2100/utils": "workspace:*"
   }
 }

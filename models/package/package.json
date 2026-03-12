@@ -13,6 +13,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@coder-2100/utils": "workspace:*"
+    "@coder-2100/format-path": "workspace:*",
+    "@coder-2100/get-npm-info": "workspace:*",
+    "@coder-2100/utils": "workspace:*",
+    "fs-extra": "catalog:",
+    "npminstall": "catalog:",
+    "package-directory": "catalog:",
+    "path-exists": "catalog:"
   }
 }

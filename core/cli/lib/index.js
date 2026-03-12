@@ -36,6 +36,9 @@ async function core() {
     registerCommand();
   } catch (e) {
     log.error(e.message);
+    if (program.debug) {
+      console.log(e);
+    }
   }
 }
 // 前置过程

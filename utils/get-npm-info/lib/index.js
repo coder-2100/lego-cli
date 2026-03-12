@@ -52,4 +52,20 @@ async function getNpmSemverVersion(baseVersion, npmName, registry) {
   }
 }
 
-export { getNpmInfo, getNpmVersions, getNpmSemverVersion };
+// 根据latest获取package最新版本号
+async function getNpmLatestVersion(npmName, registry) {
+  const versions = await getNpmVersions(npmName, registry);
+  if (versions) {
+    const result = versions.sort((a, b) => semver.gt(b, a)); // 排序
+    return result[0];
+  }
+  return null;
+}
+
+export {
+  getNpmInfo,
+  getNpmVersions,
+  getNpmSemverVersion,
+  getDefaultRegistry,
+  getNpmLatestVersion,
+};
